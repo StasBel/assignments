@@ -129,7 +129,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         }
     }
 
-    public void deserialize(InputStream in) {
+    public void deserialize(InputStream in) throws SerializationException {
         try {
             Tree.clear();
             Size = 0;
