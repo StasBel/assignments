@@ -7,18 +7,19 @@ import java.util.Vector;
 
 class Vertex {
     boolean isTerminal;
-    int[] go = new int[128];
-    int TermSonsNum;
+    static int charNum = 128;
+    int[] go = new int[charNum];
+    int terminalSonsNumber;
     Vertex() {
         isTerminal = false;
-        for(int i = 0; i < 128; i++) {
+        for(int i = 0; i < charNum; i++) {
             go[i] = -1;
         }
-        TermSonsNum = 0;
+        terminalSonsNumber = 0;
     }
 }
 
-public class StringSetImpl implements StringSet, StreamSerializable{
+public class StringSetImpl implements StringSet, StreamSerializable {
     private Vector<Vertex> Tree = new Vector<Vertex>();
     private int Size;
 
@@ -28,20 +29,20 @@ public class StringSetImpl implements StringSet, StreamSerializable{
     }
 
     public boolean add(String element) {
-        Vertex v = Tree.get(0);
+        Vertex currentVertex = Tree.get(0);
         boolean isCont = contains(element);
         if (!isCont) {
             for(int i = 0; i < element.length(); i++) {
-                int k = (int)element.charAt(i);
-                if (v.go[k] == -1) {
+                int charNum = (int)element.charAt(i);
+                if (currentVertex.go[charNum] == -1) {
                     Tree.add(new Vertex());
-                    v.go[k] = Tree.size() - 1;
+                    currentVertex.go[charNum] = Tree.size() - 1;
                 }
-                v.TermSonsNum++;
-                v = Tree.get(v.go[k]);
+                currentVertex.terminalSonsNumber++;
+                currentVertex = Tree.get(currentVertex.go[charNum]);
             }
             Size++;
-            v.isTerminal = true;
+            currentVertex.isTerminal = true;
             return true;
         } else {
             return false;
@@ -49,31 +50,31 @@ public class StringSetImpl implements StringSet, StreamSerializable{
     }
 
     public boolean contains(String element) {
-        Vertex v = Tree.get(0);
+        Vertex currentVertex = Tree.get(0);
         for(int i = 0; i < element.length(); i++) {
-            int k = (int)element.charAt(i);
-            if (v.go[k] == -1) {
+            int charNum = (int)element.charAt(i);
+            if (currentVertex.go[charNum] == -1) {
                 return false;
             }
-            v = Tree.get(v.go[k]);
+            currentVertex = Tree.get(currentVertex.go[charNum]);
         }
-        return v.isTerminal;
+        return currentVertex.isTerminal;
     }
 
     public boolean remove(String element) {
-        Vertex v = Tree.get(0);
+        Vertex currentVertex = Tree.get(0);
         boolean isCont = contains(element);
         if (isCont) {
             for(int i = 0; i < element.length(); i++) {
-                int k = (int)element.charAt(i);
-                if (v.go[k] == -1) {
+                int charNum = (int)element.charAt(i);
+                if (currentVertex.go[charNum] == -1) {
                     return false;
                 }
-                v.TermSonsNum--;
-                v = Tree.get(v.go[k]);
+                currentVertex.terminalSonsNumber--;
+                currentVertex = Tree.get(currentVertex.go[charNum]);
             }
             Size--;
-            v.isTerminal = false;
+            currentVertex.isTerminal = false;
             return true;
         } else {
             return false;
@@ -85,15 +86,15 @@ public class StringSetImpl implements StringSet, StreamSerializable{
     }
 
     public int howManyStartsWithPrefix(String prefix){
-        Vertex v = Tree.get(0);
+        Vertex currentVertex = Tree.get(0);
         for(int i = 0; i < prefix.length(); i++) {
-            int k = (int)prefix.charAt(i);
-            if (v.go[k] == -1) {
+            int charNum = (int)prefix.charAt(i);
+            if (currentVertex.go[charNum] == -1) {
                 return 0;
             }
-            v = Tree.get(v.go[k]);
+            currentVertex = Tree.get(currentVertex.go[charNum]);
         }
-        return v.TermSonsNum + (v.isTerminal ? 1 : 0);
+        return currentVertex.terminalSonsNumber + (currentVertex.isTerminal ? 1 : 0);
     }
 
     private static int byteArrayToInt(byte[] b, int start, int length) {
@@ -118,10 +119,10 @@ public class StringSetImpl implements StringSet, StreamSerializable{
             for(int i = 0; i < Tree.size(); i++) {
                 Vertex v = Tree.get(i);
                 out.write(v.isTerminal ? 1 : 0);
-                for(int j = 0; j < 128; j++) {
+                for(int j = 0; j < Vertex.charNum; j++) {
                     out.write(intToByteArray(v.go[j], 4));
                 }
-                out.write(intToByteArray(v.TermSonsNum, 4));
+                out.write(intToByteArray(v.terminalSonsNumber, 4));
             }
         } catch (IOException e) {
             throw new SerializationException();
@@ -138,15 +139,15 @@ public class StringSetImpl implements StringSet, StreamSerializable{
                 return;
             }
             Size = byteArrayToInt(SizeIn, 0, 4);
-            byte[] VertexIn = new byte[517];
-            while ((in.read(VertexIn)) > 0) {
-                Vertex v = new Vertex();
-                v.isTerminal = byteArrayToInt(VertexIn, 0, 1) == 1;
-                for(int j = 0; j < 128; j++) {
-                    v.go[j] = byteArrayToInt(VertexIn, 1 + j * 4, 4);
+            byte[] VertexIn = new byte[1 + 4 * Vertex.charNum + 4];
+            while (in.read(VertexIn) > 0) {
+                Vertex vertex = new Vertex();
+                vertex.isTerminal = byteArrayToInt(VertexIn, 0, 1) == 1;
+                for(int j = 0; j < Vertex.charNum; j++) {
+                    vertex.go[j] = byteArrayToInt(VertexIn, 1 + j * 4, 4);
                 }
-                v.TermSonsNum = byteArrayToInt(VertexIn, 513, 4);
-                Tree.add(v);
+                vertex.terminalSonsNumber = byteArrayToInt(VertexIn, 1 + 4 * Vertex.charNum, 4);
+                Tree.add(vertex);
             }
         } catch (IOException e) {
             throw new SerializationException();
