@@ -3,45 +3,48 @@ package ru.spbau.mit;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Vector;
-
-class Vertex {
-    boolean isTerminal;
-    static int charNum = 128;
-    int[] go = new int[charNum];
-    int terminalSonsNumber;
-    Vertex() {
-        isTerminal = false;
-        for(int i = 0; i < charNum; i++) {
-            go[i] = -1;
-        }
-        terminalSonsNumber = 0;
-    }
-}
+import java.util.ArrayList;
 
 public class StringSetImpl implements StringSet, StreamSerializable {
-    private Vector<Vertex> Tree = new Vector<Vertex>();
-    private int Size;
 
-    StringSetImpl() {
-        Tree.add(new Vertex());
-        Size = 0;
+    private static class Vertex {
+        private static int CHAR_NUM = 128;
+        private static int NO_GO = -1;
+        private static int BYTE_NUM = 1 + 4 * CHAR_NUM + 4;
+        private boolean isTerminal;
+        private int[] go = new int[CHAR_NUM];
+        private int terminalSonsNumber;
+        public Vertex() {
+            isTerminal = false;
+            for (int i = 0; i < CHAR_NUM; i++) {
+                go[i] = NO_GO;
+            }
+            terminalSonsNumber = 0;
+        }
+    }
+
+    private ArrayList<Vertex> tree;
+    private int size;
+
+    public StringSetImpl() {
+        tree = new ArrayList<>();
+        tree.add(new Vertex());
+        size = 0;
     }
 
     public boolean add(String element) {
-        Vertex currentVertex = Tree.get(0);
-        boolean isCont = contains(element);
-        if (!isCont) {
-            for(int i = 0; i < element.length(); i++) {
-                int charNum = (int)element.charAt(i);
-                if (currentVertex.go[charNum] == -1) {
-                    Tree.add(new Vertex());
-                    currentVertex.go[charNum] = Tree.size() - 1;
+        Vertex currentVertex = tree.get(0);
+        if (!contains(element)) {
+            for (char nextChar : element.toCharArray()) {
+                int nextCharNum = (int)nextChar;
+                if (currentVertex.go[nextCharNum] == Vertex.NO_GO) {
+                    tree.add(new Vertex());
+                    currentVertex.go[nextCharNum] = tree.size() - 1;
                 }
                 currentVertex.terminalSonsNumber++;
-                currentVertex = Tree.get(currentVertex.go[charNum]);
+                currentVertex = tree.get(currentVertex.go[nextCharNum]);
             }
-            Size++;
+            size++;
             currentVertex.isTerminal = true;
             return true;
         } else {
@@ -50,30 +53,26 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public boolean contains(String element) {
-        Vertex currentVertex = Tree.get(0);
-        for(int i = 0; i < element.length(); i++) {
-            int charNum = (int)element.charAt(i);
-            if (currentVertex.go[charNum] == -1) {
+        Vertex currentVertex = tree.get(0);
+        for (char nextChar : element.toCharArray()) {
+            int nextCharNum = (int)nextChar;
+            if (currentVertex.go[nextCharNum] == Vertex.NO_GO) {
                 return false;
             }
-            currentVertex = Tree.get(currentVertex.go[charNum]);
+            currentVertex = tree.get(currentVertex.go[nextCharNum]);
         }
         return currentVertex.isTerminal;
     }
 
     public boolean remove(String element) {
-        Vertex currentVertex = Tree.get(0);
-        boolean isCont = contains(element);
-        if (isCont) {
-            for(int i = 0; i < element.length(); i++) {
-                int charNum = (int)element.charAt(i);
-                if (currentVertex.go[charNum] == -1) {
-                    return false;
-                }
+        Vertex currentVertex = tree.get(0);
+        if (contains(element)) {
+            for (char nextChar : element.toCharArray()) {
+                int nextCharNum = (int)nextChar;
                 currentVertex.terminalSonsNumber--;
-                currentVertex = Tree.get(currentVertex.go[charNum]);
+                currentVertex = tree.get(currentVertex.go[nextCharNum]);
             }
-            Size--;
+            size--;
             currentVertex.isTerminal = false;
             return true;
         } else {
@@ -82,17 +81,17 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public int size(){
-        return Size;
+        return size;
     }
 
     public int howManyStartsWithPrefix(String prefix){
-        Vertex currentVertex = Tree.get(0);
-        for(int i = 0; i < prefix.length(); i++) {
-            int charNum = (int)prefix.charAt(i);
-            if (currentVertex.go[charNum] == -1) {
+        Vertex currentVertex = tree.get(0);
+        for (char nextChar : prefix.toCharArray()) {
+            int nextCharNum = (int)nextChar;
+            if (currentVertex.go[nextCharNum] == Vertex.NO_GO) {
                 return 0;
             }
-            currentVertex = Tree.get(currentVertex.go[charNum]);
+            currentVertex = tree.get(currentVertex.go[nextCharNum]);
         }
         return currentVertex.terminalSonsNumber + (currentVertex.isTerminal ? 1 : 0);
     }
@@ -106,23 +105,21 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         return dt;
     }
 
-    private static byte[] intToByteArray(int n, int byteCount) {
-        byte[] res = new byte[byteCount];
-        for (int i = 0; i < byteCount; i++)
-            res[byteCount - i - 1] = (byte) ((n >> i * 8) & 255);
+    private static byte[] intToByteArray(int n) {
+        byte[] res = new byte[4];
+        for (int i = 0; i < 4; i++)
+            res[3 - i] = (byte)((n >> i * 8) & 255);
         return res;
     }
 
     public void serialize(OutputStream out) throws SerializationException {
         try {
-            out.write(intToByteArray(Size, 4));
-            for(int i = 0; i < Tree.size(); i++) {
-                Vertex v = Tree.get(i);
-                out.write(v.isTerminal ? 1 : 0);
-                for(int j = 0; j < Vertex.charNum; j++) {
-                    out.write(intToByteArray(v.go[j], 4));
+            for (Vertex nextVertex : tree) {
+                out.write(nextVertex.isTerminal ? 1 : 0);
+                for (int nextMove : nextVertex.go) {
+                    out.write(intToByteArray(nextMove));
                 }
-                out.write(intToByteArray(v.terminalSonsNumber, 4));
+                out.write(intToByteArray(nextVertex.terminalSonsNumber));
             }
         } catch (IOException e) {
             throw new SerializationException();
@@ -131,26 +128,22 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     public void deserialize(InputStream in) throws SerializationException {
         try {
-            Tree.clear();
-            Size = 0;
-            byte[] SizeIn = new byte[4];
-            int res = in.read(SizeIn);
-            if (res < 4) {
-                return;
-            }
-            Size = byteArrayToInt(SizeIn, 0, 4);
-            byte[] VertexIn = new byte[1 + 4 * Vertex.charNum + 4];
-            while (in.read(VertexIn) > 0) {
-                Vertex vertex = new Vertex();
-                vertex.isTerminal = byteArrayToInt(VertexIn, 0, 1) == 1;
-                for(int j = 0; j < Vertex.charNum; j++) {
-                    vertex.go[j] = byteArrayToInt(VertexIn, 1 + j * 4, 4);
+            tree.clear();
+            size = 0;
+            byte[] vertexIn = new byte[Vertex.BYTE_NUM];
+            while (in.read(vertexIn) > 0) {
+                size++;
+                Vertex nextVertex = new Vertex();
+                nextVertex.isTerminal = byteArrayToInt(vertexIn, 0, 1) == 1;
+                for (int j = 0; j < Vertex.CHAR_NUM; j++) {
+                    nextVertex.go[j] = byteArrayToInt(vertexIn, 1 + j * 4, 4);
                 }
-                vertex.terminalSonsNumber = byteArrayToInt(VertexIn, 1 + 4 * Vertex.charNum, 4);
-                Tree.add(vertex);
+                nextVertex.terminalSonsNumber = byteArrayToInt(vertexIn, Vertex.BYTE_NUM - 4, 4);
+                tree.add(nextVertex);
             }
         } catch (IOException e) {
             throw new SerializationException();
         }
     }
+
 }
