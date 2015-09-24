@@ -132,9 +132,9 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             size = 0;
             byte[] vertexIn = new byte[Vertex.BYTE_NUM];
             while (in.read(vertexIn) > 0) {
-                size++;
                 Vertex nextVertex = new Vertex();
                 nextVertex.isTerminal = byteArrayToInt(vertexIn, 0, 1) == 1;
+                size += nextVertex.isTerminal? 1 : 0;
                 for (int j = 0; j < Vertex.CHAR_NUM; j++) {
                     nextVertex.go[j] = byteArrayToInt(vertexIn, 1 + j * 4, 4);
                 }
