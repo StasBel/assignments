@@ -66,7 +66,8 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public boolean contains(String element) {
-        return findVertex(element) != Vertex.NULL_VERTEX;
+        Vertex vertex = findVertex(element);
+        return (vertex != Vertex.NULL_VERTEX) && (vertex.isTerminal);
     }
 
     public boolean remove(String element) {
