@@ -11,6 +11,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         private static int CHAR_NUM = 128;
         private static int NO_GO = -1;
         private static int BYTE_NUM = 1 + 4 * CHAR_NUM + 4;
+        private static Vertex NULL_VERTEX = null;
         private boolean isTerminal;
         private int[] go = new int[CHAR_NUM];
         private int terminalSonsNumber;
@@ -52,16 +53,20 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         }
     }
 
-    public boolean contains(String element) {
+    private Vertex findVertex(String element) {
         Vertex currentVertex = tree.get(0);
         for (char nextChar : element.toCharArray()) {
             int nextCharNum = (int)nextChar;
             if (currentVertex.go[nextCharNum] == Vertex.NO_GO) {
-                return false;
+                return Vertex.NULL_VERTEX;
             }
             currentVertex = tree.get(currentVertex.go[nextCharNum]);
         }
-        return currentVertex.isTerminal;
+        return currentVertex;
+    }
+
+    public boolean contains(String element) {
+        return findVertex(element) != Vertex.NULL_VERTEX;
     }
 
     public boolean remove(String element) {
@@ -85,15 +90,8 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public int howManyStartsWithPrefix(String prefix){
-        Vertex currentVertex = tree.get(0);
-        for (char nextChar : prefix.toCharArray()) {
-            int nextCharNum = (int)nextChar;
-            if (currentVertex.go[nextCharNum] == Vertex.NO_GO) {
-                return 0;
-            }
-            currentVertex = tree.get(currentVertex.go[nextCharNum]);
-        }
-        return currentVertex.terminalSonsNumber + (currentVertex.isTerminal ? 1 : 0);
+        Vertex vertex = findVertex(prefix);
+        return vertex == Vertex.NULL_VERTEX ? 0 : vertex.terminalSonsNumber + (vertex.isTerminal ? 1 : 0);
     }
 
     private static int byteArrayToInt(byte[] b, int start, int length) {
