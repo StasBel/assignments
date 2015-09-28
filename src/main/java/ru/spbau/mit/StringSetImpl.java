@@ -9,10 +9,10 @@ import java.util.List;
 public class StringSetImpl implements StringSet, StreamSerializable {
 
     private static class Vertex {
-        private static int CHAR_NUM = 128;
-        private static int NO_GO = -1;
-        private static int BYTE_NUM = 1 + 4 * CHAR_NUM + 4;
-        private static Vertex NULL_VERTEX = null;
+        private static final int CHAR_NUM = 128;
+        private static final int NO_GO = -1;
+        private static final int BYTE_NUM = 1 + 4 * CHAR_NUM + 4;
+        private static final Vertex NULL_VERTEX = null;
         private boolean isTerminal;
         private int[] go = new int[CHAR_NUM];
         private int terminalSonsNumber;
