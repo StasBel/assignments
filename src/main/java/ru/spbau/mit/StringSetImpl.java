@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StringSetImpl implements StringSet, StreamSerializable {
 
@@ -24,7 +25,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         }
     }
 
-    private ArrayList<Vertex> tree;
+    private List<Vertex> tree;
     private int size;
 
     public StringSetImpl() {
