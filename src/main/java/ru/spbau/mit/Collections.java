@@ -2,6 +2,7 @@ package ru.spbau.mit;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Collections {
@@ -52,15 +53,14 @@ public class Collections {
         return x;
     }
 
-    public static <X, Y> Y foldr(final Function2<? super X, ? super Y, ? extends Y> f, Y x, final Iterator<X> it) {
-        if (!it.hasNext()) {
-            return x;
-        }
-        X element = it.next();
-        return f.apply(element, foldr(f, x, it));
-    }
-
     public static <X, Y> Y foldr(final Function2<? super X, ? super Y, ? extends Y> f, Y x, final Iterable<X> a) {
-        return foldr(f, x, a.iterator());
+        LinkedList<X> copy = new LinkedList<>();
+        for (X element : a) {
+            copy.addLast(element);
+        }
+        for (Iterator<X> iterator = copy.descendingIterator(); iterator.hasNext();) {
+            x = f.apply(iterator.next(), x);
+        }
+        return x;
     }
 }

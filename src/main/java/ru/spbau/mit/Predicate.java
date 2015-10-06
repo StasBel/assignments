@@ -1,14 +1,16 @@
 package ru.spbau.mit;
 
+import java.util.Objects;
+
 public abstract class Predicate<X> extends Function1<X, Boolean> {
-    public final static Predicate ALWAYS_TRUE = new Predicate() {
+    public final static Predicate<Object> ALWAYS_TRUE = new Predicate<Object>() {
         @Override
         public Boolean apply(Object argument) {
             return true;
         }
     };
 
-    public final static Predicate ALWAYS_FALSE = new Predicate() {
+    public final static Predicate<Object> ALWAYS_FALSE = new Predicate<Object>() {
         @Override
         public Boolean apply(Object argument) {
             return false;

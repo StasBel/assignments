@@ -4,14 +4,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class Function1Test {
-    static final Function1<Integer, Integer> DOUBLE = new Function1<Integer, Integer>() {
+    private static final Function1<Integer, Integer> DOUBLE = new Function1<Integer, Integer>() {
         @Override
         public Integer apply(Integer argument) {
             return argument * argument;
         }
     };
 
-    static final Function1<Integer, Integer> TRIPLE = new Function1<Integer, Integer>() {
+    private static final Function1<Integer, Integer> TRIPLE = new Function1<Integer, Integer>() {
         @Override
         public Integer apply(Integer argument) {
             return argument * argument * argument;
