@@ -1,6 +1,7 @@
 package ru.spbau.mit;
 
 
+
 public interface Connection {
 
     /** Send message to the client. **/
